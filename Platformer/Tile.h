@@ -1,13 +1,19 @@
 #pragma once
 #include "SFML\Graphics.hpp"
+#include "Collider.h"
 
 class Tile
 {
 public:
-	Tile();
+	Tile(float x, float y, int blockX, int blockY);
 	~Tile();
+
+	void Draw(sf::RenderWindow &window);
+
+	Collider GetCollider() { return Collider(tile); }
 private:
-	sf::Sprite tile;
-	sf::Texture tile_texture;
+	sf::RectangleShape tile;
+	sf::Texture *tile_texture;
+	sf::IntRect pos;
 };
 

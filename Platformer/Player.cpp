@@ -1,19 +1,21 @@
 #include "Player.h"
+#include <iostream>
 
 
-Player::Player(sf::FloatRect rectangle)
+Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, float jumpHeight) :
+	animation{ texture, imageCount, switchTime }
 {
-	dx = 0, dy = 0;
-	currentFrame = 0;
-	this->rect = rectangle;
-	texture.loadFromFile("Textures/moving.png");
-	sprite.setTexture(texture);
-	sprite.setTextureRect(sf::IntRect(0, 0, 32, 32));
-	sprite.setPosition(rect.left , rect.top);
-	sprite.setScale(2, 2);
-	onGround = false;
-	isMoving = false;
-	isJumping = false;
+	this->speed = speed;
+	this->jumpHeight = jumpHeight;
+	row = 0;
+	faceRight = true;
+	canJump = false;
+
+	body.setSize(sf::Vector2f(32.0f, 32.0f));
+	body.setTexture(texture);
+	body.setPosition(sf::Vector2f(683.0f,500.0f));
+	body.setOrigin(body.getSize() / 2.0f);
+	
 }
 
 
@@ -22,110 +24,102 @@ Player::~Player()
 	
 }
 
-void Player::move()
+void Player::Draw(sf::RenderWindow &window)
 {
-	bool up = false;
-	bool left = false, right = false;
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && !left)
+	window.draw(body);
+}
+
+void Player::OnCollision(sf::Vector2f direction)
+{
+	if (direction.x < 0.0f)
 	{
-		dx = 0.1f;
-		right = true;
-		isMoving = true;
+		velocity.x = 0; //collision on the left
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && !right)
+	else if (direction.x > 0.0f)
 	{
-		dx = -0.1f;
-		left = true;
-		isMoving = true;
+		velocity.x = 0; //collision on the right
 	}
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+
+	if (direction.y < 0.0f)
 	{
-		if (onGround == true)
-		{
-			dy = -0.3f;
-			up = true;
-			isJumping = true;
-		}
+		velocity.y = 0; //collision on the bottom
+		canJump = true;
+	}
+	else if (direction.y > 0.0f)
+	{
+		velocity.y = 0; //collision on the top
 	}
 }
 
-
-void Player::draw(sf::RenderWindow &window)
+sf::Vector2f Player::GetPosition()
 {
-	window.draw(sprite);
+	return body.getPosition();
 }
 
-sf::Sprite & Player::getSprite()
+void Player::Update(float &deltaTime)
 {
-	return sprite;
-}
-
-void Player::update(sf::Sprite &ground, float time)
-{
+	velocity.x = 0.0f;
 	
-	move();
-	if (onGround == false)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
-		dy += G * time;
+		velocity.x += speed;
 	}
-	rect.left += dx * time;
-	rect.top += dy * time;
-
-	currentFrame += 0.005f * time;
-
-	if (currentFrame > 4.005f)
-		currentFrame = 0;
-	if (dx > 0)
-		sprite.setTextureRect(sf::IntRect(int(currentFrame) * 32, 0, 32, 32));
-	if (dx < 0)
-		sprite.setTextureRect(sf::IntRect(int(currentFrame) * 32 + rect.height, 0, -32, 32));
-	if (isJumping && dx > 0)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
-		if (dy < 0)
-			sprite.setTextureRect(sf::IntRect(int(currentFrame+4) * 32, 0, 32, 32));
-		else if (dy > 0)
-			sprite.setTextureRect(sf::IntRect(int(currentFrame + 8) * 32, 0, 32, 32));
-	}
-	if (isJumping && dx < 0)
-	{
-		if (dy < 0)
-			sprite.setTextureRect(sf::IntRect(int(currentFrame + 4) * 32 + rect.height, 0, -32, 32));
-		else if (dy > 0)
-			sprite.setTextureRect(sf::IntRect(int(currentFrame + 8) * 32 + rect.height, 0, -32, 32));
+		velocity.x -= speed;
 	}
 
-
-
-	if (dx == 0)
-		isMoving = false;
-	
-	if (isMoving == false)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && canJump)
 	{
-		sprite.setTextureRect(sf::IntRect(0, 0, 32, 32));
+		canJump = false;
+		velocity.y = -sqrtf(2.0f * G * jumpHeight);
 	}
 	
-	sprite.setPosition(rect.left, rect.top);
-	intersectGround(ground);
+	velocity.y += G * deltaTime;
+	
 
-	dx = 0;
-	if (onGround)
+	if (velocity.x == 0)
 	{
-		dy = 0;
-	}
-}
-
-void Player::intersectGround(sf::Sprite &something)
-{
-	if (sprite.getGlobalBounds().intersects(something.getGlobalBounds()))
-	{
-		setOnGround(true);
+		row = 0;
 	}
 	else
-		setOnGround(false);
+	{
+		row = 1;
+		if (velocity.x > 0.0f)
+			faceRight = true;
+		else
+			faceRight = false;
+	}
+	
+	/*if (abs(velocity.y) > 0)
+	{
+		if (velocity.y < 0.0f && velocity.x > 0.0f)
+		{
+			faceRight = true;
+			row = 2;
+		}
+		else if (velocity.y < 0.0f && velocity.x < 0.0f)
+		{
+			faceRight = false;
+			row = 2;
+		}
+		else if (velocity.y > 0.0f && velocity.x > 0.0f)
+		{
+			faceRight = true;
+			row = 3;
+		}
+		else if (velocity.y > 0.0f && velocity.x < 0.0f)
+		{
+			faceRight = false;
+			row = 3;
+		}
+	}*/
+
+	
+
+	animation.Update(row, deltaTime, faceRight);
+	body.setTextureRect(animation.uvRect);
+
+	body.move(velocity * deltaTime);
 }
 
-void Player::setOnGround(bool onGround)
-{
-	this->onGround = onGround;
-}

@@ -2,27 +2,34 @@
 #include <vector>
 #include <string>
 #include "SFML\Graphics.hpp"
+#include "Tile.h"
+#include "Animation.h"
+#include "Collider.h"
 
 class Player
 {
 public:
-	Player(sf::FloatRect rectangle);
+	Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, float jumpHeight);
 	~Player();
-	void move();
-	float currentFrame = 0;
-	float dx, dy;
-	void draw(sf::RenderWindow &window);
-	sf::FloatRect rect;
-	sf::Sprite &getSprite();
-	void update(sf::Sprite &ground, float time);
-	void intersectGround(sf::Sprite &something);
+
+	void Draw(sf::RenderWindow &window);
+	void OnCollision(sf::Vector2f direction);
+	void Update(float &deltaTime);
+
+	sf::Vector2f GetPosition();
+	Collider GetCollider() { return Collider(body); }
+
 private:
-	sf::Texture texture;
-	sf::Sprite sprite;
-	bool onGround;
-	bool isMoving;
-	bool isJumping;
-	const float G = 0.0005f;
-	void setOnGround(bool onGround);
+	sf::RectangleShape body;
+	bool faceRight;
+	unsigned int row;
+	float speed;
+	Animation animation;
+
+	sf::Vector2f velocity;
+	bool canJump;
+	float jumpHeight;
+
+	const float G = 981.0f;
 };
 
