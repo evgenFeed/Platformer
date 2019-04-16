@@ -2,8 +2,9 @@
 #include <iostream>
 
 
-Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, float jumpHeight) :
-	animation{ texture, imageCount, switchTime }
+Player::Player(sf::Texture texture, sf::Vector2u imageCount, float switchTime, float speed, float jumpHeight) :
+	animation{ texture, imageCount, switchTime },
+	box()
 {
 	this->speed = speed;
 	this->jumpHeight = jumpHeight;
@@ -11,11 +12,11 @@ Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, 
 	faceRight = true;
 	canJump = false;
 
-	body.setSize(sf::Vector2f(32.0f, 32.0f));
+	//body.setSize(sf::Vector2f(32.0f, 32.0f));
 	body.setTexture(texture);
 	body.setPosition(sf::Vector2f(683.0f,500.0f));
-	body.setOrigin(body.getSize() / 2.0f);
-	
+	body.setOrigin(body.getLocalBounds().width / 2, body.getLocalBounds().height / 2);
+	box.setMinMax(body.getGlobalBounds());
 }
 
 
@@ -29,37 +30,38 @@ void Player::Draw(sf::RenderWindow &window)
 	window.draw(body);
 }
 
-void Player::OnCollision(sf::Vector2f direction)
-{
-	if (direction.x < 0.0f)
-	{
-		velocity.x = 0; //collision on the left
-	}
-	else if (direction.x > 0.0f)
-	{
-		velocity.x = 0; //collision on the right
-	}
 
-	if (direction.y < 0.0f)
-	{
-		velocity.y = 0; //collision on the bottom
-		canJump = true;
-	}
-	else if (direction.y > 0.0f)
-	{
-		velocity.y = 0; //collision on the top
-	}
-}
 
 sf::Vector2f Player::GetPosition()
 {
 	return body.getPosition();
 }
 
-void Player::Update(float &deltaTime)
+sf::Vector2f& Player::GetDirection()
 {
+	return direction;
+}
+
+void Player::CheckCollision()
+{
+	bool movedX = false, movedY = false;
+	if (direction.x > 0 || direction.x < 0 && movedX == false)
+	{
+		//velocity.x = -velocity.x;
+		movedX = true;
+	}
+	if (direction.y < 0 && movedY == false)
+	{
+		velocity.y = -velocity.y;
+		movedY = true;
+	}
+}
+
+void Player::Update(float &deltaTime, std::vector<Tile*> tiles)
+{
+	box.setMinMax(this->body.getGlobalBounds());
 	velocity.x = 0.0f;
-	
+
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
 		velocity.x += speed;
@@ -74,9 +76,16 @@ void Player::Update(float &deltaTime)
 		canJump = false;
 		velocity.y = -sqrtf(2.0f * G * jumpHeight);
 	}
-	
+
 	velocity.y += G * deltaTime;
-	
+
+	//CheckCollision();
+	if (direction.y > 0)
+	{
+		velocity.y = 0;
+		canJump = true;
+	}
+
 
 	if (velocity.x == 0)
 	{

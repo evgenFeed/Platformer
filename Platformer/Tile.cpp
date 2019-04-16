@@ -2,7 +2,8 @@
 
 
 
-Tile::Tile(float x, float y, int blockX, int blockY)
+Tile::Tile(float x, float y, int blockX, int blockY) :
+	box()
 {
 	tile_texture = new sf::Texture();
 	pos.left = x * 31;
@@ -15,6 +16,7 @@ Tile::Tile(float x, float y, int blockX, int blockY)
 	tile.setTexture(tile_texture);
 	tile.setTextureRect(sf::IntRect(blockX * 33 , blockY * 33, 31, 31));
 	tile.setPosition(pos.left, pos.top);
+	box.setMinMax(tile.getGlobalBounds());
 }
 
 

@@ -1,5 +1,7 @@
 #include "Game.h"
 
+
+
 static const float VIEW_HEIGHT = 768;
 static const float VIEW_WIDTH = 1366;
 
@@ -9,12 +11,12 @@ void ResizeWindow(const sf::RenderWindow& window, sf::View& view)
 	view.setSize(VIEW_HEIGHT * aspectRatio, VIEW_HEIGHT);
 }
 
-Game::Game()
+Game::Game() :
+	mTexturesHolder()
 {
 	window = new sf::RenderWindow(sf::VideoMode(VIEW_WIDTH, VIEW_HEIGHT), "Platformer");
-	playerTexture = new sf::Texture();
-	playerTexture->loadFromFile("Textures/player.png");
-	player = new Player(playerTexture, sf::Vector2u(4, 4), 0.5f, 100.f, 150.f);
+	mTexturesHolder.load(Textures::Player, "Textures/player.png");
+	player = new Player(mTexturesHolder.get(Textures::Player) , sf::Vector2u(4, 4), 0.5f, 150.f, 150.f);
 	map = {
 		"CCCC CCCCCC CCCCCCCC CCCCCC CCCCCCCC CCCCCCC",
 		"   CCC    CCC      CCC    CCC      CCC    CC",
@@ -71,19 +73,26 @@ Game::~Game()
 	delete window;
 }
 
-void Game::Start()
+void Game::run()
 {
+	
 	sf::Clock timer;
-	float deltaTime = 0.0f;
-	sf::View view(sf::Vector2f(0, 0), sf::Vector2f(window->getSize()));
+	
 	while (window->isOpen())
 	{
-		sf::Event event;
-		deltaTime = timer.restart().asSeconds();
-		if (deltaTime > 1.0f / 20.0f)
-			deltaTime = 1.0f / 20.0f;
-		view.setCenter(player->GetPosition().x, window->getSize().y / 2);
-		while (window->pollEvent(event))
+		processEvents();
+		update(timer.restart());
+		render();
+	}
+}
+
+void Game::processEvents()
+{	
+	sf::Event event;
+	sf::View view(sf::Vector2f(0, 0), sf::Vector2f(window->getSize()));
+	view.setCenter(player->GetPosition().x, window->getSize().y / 2);
+	window->setView(view);
+	while (window->pollEvent(event))
 		{
 			switch (event.type)
 			{
@@ -95,29 +104,31 @@ void Game::Start()
 				break;
 			}
 		}
-		
+}
 
-		
-		
-		player->Update(deltaTime);
-		sf::Vector2f direction;
-		for (auto &t : tiles)
-		{
-			if (player->GetCollider().CheckCollision(&t->GetCollider(), direction, 1.0f))
-				player->OnCollision(direction);
-		}
-		
-
-		window->clear(sf::Color(114,201,207));
-		window->setView(view);
-
-		player->Draw(*window);
-		for (auto t : tiles)
-		{
-			t->Draw(*window);
-		}
-
-
-		window->display();
+void Game::update(sf::Time deltaTime)
+{
+	
+	float dt = deltaTime.asSeconds();
+	if (deltaTime.asSeconds() > 1.0f / 600.0f)
+		dt = 1.0f / 600.0f;
+	player->Update(dt, tiles);
+	for (auto &t : tiles)
+	{
+		if (player->box.Intersects(t->box, player->GetDirection()))
+			player->box.directionOfIntersect(t->box, player->GetDirection());
 	}
+}
+
+void Game::render()
+{
+	window->clear(sf::Color(114, 201, 207));
+
+	player->Draw(*window);
+	for (auto t : tiles)
+	{
+		t->Draw(*window);
+	}
+
+	window->display();
 }
