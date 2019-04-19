@@ -12,11 +12,9 @@ void ResizeWindow(const sf::RenderWindow& window, sf::View& view)
 }
 
 Game::Game() :
-	mTexturesHolder()
+	mWindow{ sf::VideoMode(1366,768), "Platformer" },
+	mWorld(mWindow)
 {
-	window = new sf::RenderWindow(sf::VideoMode(VIEW_WIDTH, VIEW_HEIGHT), "Platformer");
-	mTexturesHolder.load(Textures::Player, "Textures/player.png");
-	player = new Player(mTexturesHolder.get(Textures::Player) , sf::Vector2u(4, 4), 0.5f, 150.f, 150.f);
 	map = {
 		"CCCC CCCCCC CCCCCCCC CCCCCC CCCCCCCC CCCCCCC",
 		"   CCC    CCC      CCC    CCC      CCC    CC",
@@ -58,19 +56,15 @@ Game::Game() :
 				tiles.push_back(new Tile(j, i, 17, 1));
 		}
 	}
-	//sf::View view(sf::FloatRect(0.0f, 0.0f, 1366.f, 768.f));
-	
 }
 
 
 Game::~Game()
 {
-	delete player;
 	for (auto t : tiles)
 	{
 		delete t;
 	}
-	delete window;
 }
 
 void Game::run()
@@ -78,7 +72,7 @@ void Game::run()
 	
 	sf::Clock timer;
 	
-	while (window->isOpen())
+	while (mWindow.isOpen())
 	{
 		processEvents();
 		update(timer.restart());
@@ -89,46 +83,35 @@ void Game::run()
 void Game::processEvents()
 {	
 	sf::Event event;
-	sf::View view(sf::Vector2f(0, 0), sf::Vector2f(window->getSize()));
-	view.setCenter(player->GetPosition().x, window->getSize().y / 2);
-	window->setView(view);
-	while (window->pollEvent(event))
+	//view.setCenter(player->GetPosition().x, window->getSize().y / 2);
+	while (mWindow.pollEvent(event))
+	{
+		switch (event.type)
 		{
-			switch (event.type)
-			{
-			case sf::Event::Closed: 
-				window->close();
-				break;
-			case sf::Event::Resized:
-				ResizeWindow(*window, view);
-				break;
-			}
+		case sf::Event::Closed: 
+			mWindow.close();
+			break;
+		case sf::Event::Resized:
+			//ResizeWindow(*window, view);
+			break;
 		}
+	}
 }
 
 void Game::update(sf::Time deltaTime)
 {
-	
-	float dt = deltaTime.asSeconds();
-	if (deltaTime.asSeconds() > 1.0f / 600.0f)
-		dt = 1.0f / 600.0f;
-	player->Update(dt, tiles);
-	for (auto &t : tiles)
-	{
-		if (player->box.Intersects(t->box, player->GetDirection()))
-			player->box.directionOfIntersect(t->box, player->GetDirection());
-	}
+	mWorld.update(deltaTime);
 }
 
 void Game::render()
 {
-	window->clear(sf::Color(114, 201, 207));
+	mWindow.clear();
 
-	player->Draw(*window);
-	for (auto t : tiles)
+	mWorld.draw();
+	/*for (auto t : tiles)
 	{
 		t->Draw(*window);
-	}
+	}*/
 
-	window->display();
+	mWindow.display();
 }

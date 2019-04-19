@@ -3,9 +3,12 @@
 #include "ResourceHolder.h"
 #include "Player.h"
 #include "Tile.h"
+#include "World.h"
 #include <iostream>
 #include <string>
 #include <vector>
+
+
 
 class Game
 {
@@ -20,9 +23,7 @@ private:
 private:
 	std::vector<std::string>		map;
 	std::vector<Tile*>				tiles;
-	sf::RenderWindow*				window;
-	ResourceHolder <sf::Texture,
-					Textures::ID>	mTexturesHolder;
-	Player*							player;
+	sf::RenderWindow				mWindow;
+	World							mWorld;
 };
 

@@ -5,9 +5,15 @@ using namespace sf;
 
 int main()
 {
-	Game *game = new Game();
-	game->run();
-	
+	try
+	{
+		Game game;
+		game.run();
+	}
+	catch(std::exception& e)
+	{
+		std::cout << "\nEXCEPTION: " << e.what() << std::endl;
+	}
 	return 0;
 
 }

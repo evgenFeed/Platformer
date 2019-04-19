@@ -13,7 +13,7 @@ public:
 	//Collider			GetCollider() { return Collider(tile); }
 private:
 	sf::RectangleShape	tile;
-	sf::Texture			*tile_texture;
+	sf::Texture*		tile_texture;
 	sf::IntRect			pos;
 };
 

@@ -5,38 +5,32 @@
 #include "Tile.h"
 #include "Animation.h"
 #include "BoundingBox.h"
+#include "Entity.h"
 
-
-class Player
+class Player : public Entity  // inherits indirectly SceneNode
 {
+
+
 public:
-						Player(sf::Texture texture, sf::Vector2u imageCount, float switchTime, float speed, float jumpHeight);
-						~Player();
-
-	void				Draw(sf::RenderWindow &window);
-	//void				OnCollision(sf::Vector2f direction);
-	void				Update(float &deltaTime, std::vector<Tile*> tiles);
-
-	sf::Vector2f		GetPosition();
-	sf::Vector2f&		GetDirection();
-	//Collider			GetCollider() { return Collider(body); }
+	explicit			Player(const TextureHolder& textures);
+						Player(Textures::ID id, const TextureHolder& textures);
+	void				animationUpdate(sf::Time &deltaTime);
+	void				setPosition(sf::Vector2f position);
+	sf::Vector2f		getPosition();
+	virtual void		drawCurrent(sf::RenderTarget& target,
+									sf::RenderStates states) const override;
+	virtual void		updateCurrent(sf::Time dt) override;
 private:
-	void				CheckCollision();
+	
 public:
-
-	BoundingBox			box;
+	BoundingBox			mBox;
+	Animation			mAnimation;
 private:
-	sf::Sprite			body;
+	sf::Texture			mTexture;
+	sf::Sprite			mBody;
+	sf::Vector2f		mPosition;
+	float				row;
 	bool				faceRight;
-	unsigned int		row;
-	float				speed;
-	Animation			animation;
-
-	sf::Vector2f		direction;
-	sf::Vector2f		velocity;
-	bool				canJump;
-	float				jumpHeight;
-
 	const float			G = 98.1f;
 };
 

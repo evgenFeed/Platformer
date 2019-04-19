@@ -10,7 +10,7 @@ Tile::Tile(float x, float y, int blockX, int blockY) :
 	pos.top = y * 31;
 	pos.height = 31;
 	pos.width = 31;
-	tile_texture->loadFromFile("Textures/map.png");
+	tile_texture->loadFromFile("Textures/landscape.png");
 	tile.setSize(sf::Vector2f(pos.height, pos.height));
 	tile.setOrigin(pos.height / 2, pos.width / 2);
 	tile.setTexture(tile_texture);

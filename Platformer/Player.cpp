@@ -2,104 +2,105 @@
 #include <iostream>
 
 
-Player::Player(sf::Texture texture, sf::Vector2u imageCount, float switchTime, float speed, float jumpHeight) :
-	animation{ texture, imageCount, switchTime },
-	box()
+Player::Player(const TextureHolder & textures) :
+	mBody(),
+	mBox(),
+	mAnimation{ textures.get(Textures::Player),sf::Vector2u(4,4),0.25f }
 {
-	this->speed = speed;
-	this->jumpHeight = jumpHeight;
+	mTexture = textures.get(Textures::Player);
 	row = 0;
 	faceRight = true;
-	canJump = false;
 
-	//body.setSize(sf::Vector2f(32.0f, 32.0f));
-	body.setTexture(texture);
-	body.setPosition(sf::Vector2f(683.0f,500.0f));
-	body.setOrigin(body.getLocalBounds().width / 2, body.getLocalBounds().height / 2);
-	box.setMinMax(body.getGlobalBounds());
+	mBody.setTexture(this->mTexture);
+	mBody.setPosition(sf::Vector2f(683.0f, 500.0f));
+	mPosition = mBody.getPosition();
+	sf::FloatRect bounds = mBody.getLocalBounds();
+	mBody.setOrigin(bounds.width / 2, bounds.height / 2);
+	mBox.setMinMax(mBody.getGlobalBounds());
 }
 
-
-Player::~Player()
+Player::Player(Textures::ID id, const TextureHolder& textures) :
+	mBody(),
+	mAnimation{ textures.get(Textures::Player) , sf::Vector2u(4,4),0.3f },
+	mBox()
 {
+	this->mTexture = textures.get(id);
+	row = 0;
+	faceRight = true;
 	
+	mBody.setTexture(this->mTexture);
+	mBody.setTextureRect(mAnimation.uvRect);
+//	mBody.setPosition(sf::Vector2f(683.0f,500.0f));
+	mPosition = mBody.getPosition();
+	sf::FloatRect bounds = mBody.getLocalBounds();
+	mBody.setOrigin(bounds.width / 2, bounds.height / 2);
+	mBox.setMinMax(mBody.getGlobalBounds());
 }
 
-void Player::Draw(sf::RenderWindow &window)
+
+
+void Player::setPosition(sf::Vector2f position)
 {
-	window.draw(body);
+	mPosition = position;
+}
+
+sf::Vector2f Player::getPosition()
+{
+	return mPosition;
 }
 
 
 
-sf::Vector2f Player::GetPosition()
+void Player::drawCurrent(sf::RenderTarget & target, sf::RenderStates states) const
 {
-	return body.getPosition();
+	target.draw(mBody, states);
 }
 
-sf::Vector2f& Player::GetDirection()
+void Player::updateCurrent(sf::Time dt)
 {
-	return direction;
+	animationUpdate(dt);
+	move(getVelocity() * dt.asSeconds());
 }
 
-void Player::CheckCollision()
-{
-	bool movedX = false, movedY = false;
-	if (direction.x > 0 || direction.x < 0 && movedX == false)
-	{
-		//velocity.x = -velocity.x;
-		movedX = true;
-	}
-	if (direction.y < 0 && movedY == false)
-	{
-		velocity.y = -velocity.y;
-		movedY = true;
-	}
-}
 
-void Player::Update(float &deltaTime, std::vector<Tile*> tiles)
-{
-	box.setMinMax(this->body.getGlobalBounds());
-	velocity.x = 0.0f;
 
+void Player::animationUpdate(sf::Time &deltaTime)
+{
+	setVelocity(0, 0);
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 	{
-		velocity.x += speed;
+		setVelocity(1.0f,getVelocity().y);
 	}
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 	{
-		velocity.x -= speed;
+		setVelocity(-1.0f, getVelocity().y);
 	}
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && canJump)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 	{
-		canJump = false;
-		velocity.y = -sqrtf(2.0f * G * jumpHeight);
+		//setVelocity(1.0f, getVelocity().y);
 	}
 
-	velocity.y += G * deltaTime;
+	//velocity.y += G * deltaTime;
 
 	//CheckCollision();
-	if (direction.y > 0)
-	{
-		velocity.y = 0;
-		canJump = true;
-	}
-
-
-	if (velocity.x == 0)
+	//if (direction.y > 0)
+	//{
+	//	velocity.y = 0;
+	//	canJump = true;
+	//}
+	if (getVelocity().x == 0)
 	{
 		row = 0;
 	}
 	else
 	{
 		row = 1;
-		if (velocity.x > 0.0f)
+		if (getVelocity().x > 0.0f)
 			faceRight = true;
 		else
 			faceRight = false;
 	}
-	
 	/*if (abs(velocity.y) > 0)
 	{
 		if (velocity.y < 0.0f && velocity.x > 0.0f)
@@ -123,12 +124,8 @@ void Player::Update(float &deltaTime, std::vector<Tile*> tiles)
 			row = 3;
 		}
 	}*/
-
-	
-
-	animation.Update(row, deltaTime, faceRight);
-	body.setTextureRect(animation.uvRect);
-
-	body.move(velocity * deltaTime);
+	mBody.move(getVelocity());
+	mAnimation.Update(row, deltaTime.asSeconds(), faceRight);
+	mBody.setTextureRect(mAnimation.uvRect);
 }
 
